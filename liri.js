@@ -16,8 +16,39 @@ var keys = require("./keys.js");
 var client = new Twitter(keys.twitter);
 var spotify = new Spotify(keys.spotify);
 
+
+var runCommand = process.argv[2];
 var thing = process.argv[3];
 
+//=================Beginning of Main====================================
+//node command line argument - user input
+
+switch(runCommand){
+  case 'Twitter':
+  console.log('Twitter');
+  mytweets(); //This is the function for the twitter call
+  break;
+
+  case 'Spotify':
+  console.log('Spotify');
+  spotifySong()// This is the funtion for the spotify call
+  break;
+
+  case 'movie-this':
+  console.log('movie-this');
+  movieThis(thing) // this is the function for the OMDB call
+  break;
+
+  case 'do-what-it-says':
+  console.log('do-what-it-says');
+  doWhatItSays() // This is the funtion for the random.txt 
+  break;
+
+  default:
+  console.log ("Please enter one of the following:\nTwitter\nSpotify\nmovie-this\ndo-what-it-says");
+}
+
+//========================End of Main===================================
 
 
 
@@ -36,45 +67,46 @@ function mytweets() {
        console.log(tweets[i].text);
     }
   
-  })
+  });
 }
 //=========================End of Twitter=============================
 
 
 
 //=========================Beginning of Spotify=======================
-function MySpotify(){
-spotify.search({ type: 'track', query: 'Hit me baby one more' }, function(err, data) {
-    if (err) {
-      return console.log('Error occurred: ' + err);
-    }
 
-  //If there is no error, return data
+// Spotify function, uses the Spotify module to call the Spotify api
 
-  console.log('---------------------');
-  //Need to list the name of the artist
-  console.log("Artist:" + JSON.stringify(data.tracks.items[0].album.artists[0].name,null, 2)); 
-
-  //list the  The song's name
-  console.log("Song:" + JSON.stringify(data.tracks.items[0].name,null, 2));
-
-  //List the preview link of the song from Spotify
-  console.log("Preview Link:" + JSON.stringify(data.tracks.items[0].preview_url,null, 2));
-
-  //List the album that the song is from
-  console.log("Album:" + JSON.stringify(data.tracks.items[0].album.album_type,null, 2));
-
-  //If no song is provided then your program will default to "The Sign" by Ace of Base.
-  console.log('---------------------');
-
-  });
- if (thing == null){
-     thing = 'The Sign';
+function spotifySong() {
+  console.log("\r\n" + "~ have some music ~" + "\r\n");
+  var songTitle = process.argv[3];
+  console.log(songTitle);
+  if (!songTitle) {
+      console.log("No song has been entered?");
+      songTitle = "The Sign";
   }
-
-}
-
-
+  params = songTitle;
+  spotify.search({type: "track", query: params}, function(err, data) {
+      if (!err) {
+          console.log("no error!  only music!");
+          var songInfo = data.tracks.items;
+          for (var i = 0; i < 5; i++) {
+              if (songInfo[i] != undefined) {
+                  var spotifyResults = 
+                  "Artist: " + songInfo[i].artists[0].name + "\r\n" +
+        "Song: " + songInfo[i].name + "\r\n" +
+        "Album: " + songInfo[i].album.name + "\r\n" +
+        "Preview Url: " + songInfo[i].preview_url + "\r\n" + 
+        "------------------------------ " + i + " ------------------------------" + "\r\n";
+        console.log(spotifyResults);
+              }
+          }
+      } else {
+          console.log("Error Occurred, Try Again");
+          return;
+      }
+  });
+};
 //=============================End of Spotify=========================
 
 
@@ -97,6 +129,9 @@ function movieThis(thing){
        console.log('Language: ' + JSON.parse(body).Language);
        console.log('Rotten Tomatoes Rating: ' + JSON.parse(body).rottenTomatoesRating);
        console.log('-----------------------');
+     } else {
+       console.log("Error: " + error);
+       return;
      }
    });
 
@@ -104,53 +139,18 @@ function movieThis(thing){
 //=======================End of OMDB===================================
 
 
-
-
-
 //=======================Beginning of Random.txt file===================
+//Using the `fs` Node package, LIRI will take the text inside of random.txt and then use it to call one of LIRI's commands
+  
+// It also adds the spotify command
+function doWhatItSays() {
+  fs.readFile('random.txt', "utf8", function(error, data){
+    var txt = data.split(',');
 
-
-
-
+    spotifySong(txt[1]);
+  });
+}
+     
 //=========================End of Random.txt file========================
 
 
-//=================Beginning of Main====================================
-//action statement, switch statement to declare what action to execute.
-
-// if (process.argv.length < 3) {
-//   console.log("You didn't type enough arguments")
-// }
-
-//node command line argument - user input
-var runCommand = process.argv[2];
-// console.log("What is this?");
-// console.log(process.argv);
-// console.log("Hello");
-switch(runCommand){
-  case 'Twitter':
-  console.log('Twitter');
-  mytweets(); //This is the function for the twitter call
-  break;
-
-  case 'Spotify':
-  console.log('Spotify');
-  MySpotify();// This is the funtion for the spotify call
-  break;
-
-  case 'movie-this':
-  console.log('movie-this');
-  movieThis(thing) // this is the function for the OMDB call
-  break;
-
-  // case 'random.txt':
-
-  //Statements executed when none of
-  //the values match the value of the expression
-  default:
-  // console.log('Wrong choice, try again'+ runCommand + '.');
-
-
-}
-
-//========================End of Main===================================
